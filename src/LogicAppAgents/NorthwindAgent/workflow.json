@@ -1,0 +1,139 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "actions": {
+            "NorthwindAgent": {
+                "type": "Agent",
+                "inputs": {
+                    "parameters": {
+                        "agentModelType": "AzureOpenAI",
+                        "deploymentId": "gpt-4o",
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "You are a friendly, helpful assistant.\nYou have the ability to create and execute read-only T-SQL queries against our Northwind Database in order to answer user questions.\nIf asked by the user, you have the ability to generate markdown reports and write them to storage using a tool.  When writing reports, generate a unique report name that is a valid filename.  Provide this name back to the user when complete."
+                            }
+                        ],
+                        "agentModelSettings": {
+                            "agentHistoryReductionSettings": {
+                                "agentHistoryReductionType": "maximumTokenCountReduction",
+                                "maximumTokenCount": 128000
+                            },
+                            "deploymentModelProperties": {
+                                "name": "gpt-4o",
+                                "format": "OpenAI",
+                                "version": "2024-11-20"
+                            }
+                        }
+                    },
+                    "modelConfigurations": {
+                        "model1": {
+                            "referenceName": "aoai-connection"
+                        }
+                    }
+                },
+                "tools": {
+                    "Query_Northwind_Database_Tool": {
+                        "actions": {
+                            "Execute_Agent_Query": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "@agentParameters('Query')"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "northwind_connection",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Supports running read-only queries using the Northwind Database",
+                        "agentParameterSchema": {
+                            "type": "object",
+                            "properties": {
+                                "Query": {
+                                    "type": "string",
+                                    "description": "Read-only T-SQL Query"
+                                }
+                            },
+                            "required": [
+                                "Query"
+                            ]
+                        }
+                    },
+                    "Report_Storage_Tool": {
+                        "actions": {
+                            "Upload_Report": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "containerName": "northwind-reports",
+                                        "blobName": "@agentParameters('ReportName')",
+                                        "content": "@agentParameters('ReportContent')"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "northwind_storage_connection",
+                                        "operationId": "uploadBlob",
+                                        "serviceProviderId": "/serviceProviders/AzureBlob"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Use this tool to store reports",
+                        "agentParameterSchema": {
+                            "type": "object",
+                            "properties": {
+                                "ReportName": {
+                                    "type": "string",
+                                    "description": "The name of the report.  This will be used as the file name in the storage system."
+                                },
+                                "ReportContent": {
+                                    "type": "string",
+                                    "description": "Report content in Markdown format"
+                                }
+                            },
+                            "required": [
+                                "ReportName",
+                                "ReportContent"
+                            ]
+                        }
+                    }
+                },
+                "channels": {
+                    "in": {
+                        "in-channel-1": {
+                            "trigger": {
+                                "type": "Request"
+                            }
+                        }
+                    },
+                    "out": {
+                        "out-channel-1": {
+                            "action": {
+                                "type": "Response",
+                                "inputs": {
+                                    "statusCode": 200
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {},
+                "limit": {
+                    "count": 100
+                }
+            }
+        },
+        "outputs": {},
+        "triggers": {
+            "Contact_Northwind_Agent": {
+                "type": "Request",
+                "kind": "Http"
+            }
+        }
+    },
+    "kind": "Agentic"
+}

@@ -1,0 +1,47 @@
+{
+  "agentConnections": {
+    "aoai-connection": {
+      "displayName": "aoai-connection",
+      "authentication": {
+        "type": "Key",
+        "key": "@appsetting('aoai-key')"
+      },
+      "endpoint": "@appsetting('aoai-endpoint')",
+      "resourceId": "@appsetting('aoai-resource-id')",
+      "type": "model"
+    }
+  },
+  "managedApiConnections": {},
+  "serviceProviderConnections": {
+    "pubs_connection": {
+      "parameterValues": {
+        "connectionString": "@appsetting('pubs_connectionString')"
+      },
+      "parameterSetName": "connectionString",
+      "serviceProvider": {
+        "id": "/serviceProviders/sql"
+      },
+      "displayName": "pubs_connection"
+    },
+    "northwind_connection": {
+      "parameterValues": {
+        "connectionString": "@appsetting('northwind_connectionString')"
+      },
+      "parameterSetName": "connectionString",
+      "serviceProvider": {
+        "id": "/serviceProviders/sql"
+      },
+      "displayName": "northwind_connectin"
+    },
+    "northwind_storage_connection": {
+      "parameterValues": {
+        "connectionString": "@appsetting('northwind_storage_connectionString')"
+      },
+      "parameterSetName": "connectionString",
+      "serviceProvider": {
+        "id": "/serviceProviders/AzureBlob"
+      },
+      "displayName": "northwind_storage_connection"
+    }
+  }
+}

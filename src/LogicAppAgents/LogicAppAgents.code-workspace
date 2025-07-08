@@ -1,0 +1,17 @@
+{
+   "folders": [
+      {
+         "name": "LogicAppAgents",
+         "path": "."
+      }
+   ],
+   "settings": {
+      "terminal.integrated.env.windows": {
+         "PATH": "C:\\Users\\jeffvan\\.azurelogicapps\\dependencies\\DotNetSDK;${env:PATH}"
+      },
+      "omnisharp.dotNetCliPaths": [
+         "C:\\Users\\jeffvan\\.azurelogicapps\\dependencies\\DotNetSDK"
+      ],
+      "debug.internalConsoleOptions": "neverOpen"
+   }
+}

@@ -1,0 +1,143 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "actions": {
+            "PublishingAgent": {
+                "type": "Agent",
+                "inputs": {
+                    "parameters": {
+                        "agentModelType": "AzureOpenAI",
+                        "deploymentId": "gpt-4o",
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "You are a friendly, helpful assistant with access to our publishing company data.\nUse your tools to answer questions about our authors and published titles.\nDo not generate authors or titles outside of those that come directly from your tools."
+                            }
+                        ],
+                        "agentModelSettings": {
+                            "agentHistoryReductionSettings": {
+                                "agentHistoryReductionType": "maximumTokenCountReduction",
+                                "maximumTokenCount": 128000
+                            },
+                            "deploymentModelProperties": {
+                                "name": "gpt-4o",
+                                "format": "OpenAI",
+                                "version": "2024-11-20"
+                            }
+                        }
+                    },
+                    "modelConfigurations": {
+                        "model1": {
+                            "referenceName": "aoai-connection"
+                        }
+                    }
+                },
+                "tools": {
+                    "Get_Authors_Tool": {
+                        "actions": {
+                            "Get_Authors": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "SELECT [au_fname], [au_lname] FROM [dbo].[authors];"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "pubs_connection",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Use this tool to obtain a list of our authors"
+                    },
+                    "Get_Titles_By_Author_Tool": {
+                        "actions": {
+                            "Get_Titles_by_Author": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "SELECT t.title\nFROM authors a\nJOIN titleauthor ta ON a.au_id = ta.au_id\nJOIN titles t ON ta.title_id = t.title_id\nWHERE a.au_fname LIKE '@{concat('%', agentParameters('First Name'), '%')}' AND a.au_lname LIKE '@{concat('%', agentParameters('Last Name'), '%')}'"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "pubs_connection",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Obtain titles for the specified author",
+                        "agentParameterSchema": {
+                            "type": "object",
+                            "properties": {
+                                "First Name": {
+                                    "type": "string",
+                                    "description": "The author's first name"
+                                },
+                                "Last Name": {
+                                    "type": "string",
+                                    "description": "The author's last name"
+                                }
+                            },
+                            "required": [
+                                "First Name",
+                                "Last Name"
+                            ]
+                        }
+                    },
+                    "Get_Titles_Tool": {
+                        "actions": {
+                            "Get_Titles": {
+                                "type": "ServiceProvider",
+                                "inputs": {
+                                    "parameters": {
+                                        "query": "SELECT [title] FROM [dbo].[titles];"
+                                    },
+                                    "serviceProviderConfiguration": {
+                                        "connectionName": "pubs_connection",
+                                        "operationId": "executeQuery",
+                                        "serviceProviderId": "/serviceProviders/sql"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Use this tool to obtain our titles"
+                    }
+                },
+                "channels": {
+                    "in": {
+                        "in-channel-1": {
+                            "trigger": {
+                                "type": "Request"
+                            }
+                        }
+                    },
+                    "out": {
+                        "out-channel-1": {
+                            "action": {
+                                "type": "Response",
+                                "inputs": {
+                                    "statusCode": 200
+                                }
+                            }
+                        }
+                    }
+                },
+                "runAfter": {},
+                "limit": {
+                    "count": 100
+                }
+            }
+        },
+        "outputs": {},
+        "triggers": {
+            "Contact_Publishing_Agent": {
+                "type": "Request",
+                "kind": "Http"
+            }
+        }
+    },
+    "kind": "Agentic"
+}

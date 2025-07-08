@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "aoai-endpoint": "",
+    "aoai-key": "",
+    "aoai-resource-id": "",
+    "pubs_connectionString": "",
+    "northwind_connectionString": "",
+    "northwind_storage_connectionString": "",
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "APP_KIND": "workflowapp"
+  }
+}
